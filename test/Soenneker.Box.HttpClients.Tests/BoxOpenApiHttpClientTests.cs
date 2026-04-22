@@ -1,20 +1,19 @@
 using Soenneker.Box.HttpClients.Abstract;
-using Soenneker.Tests.FixturedUnit;
-using Xunit;
+using Soenneker.Tests.HostedUnit;
 
 namespace Soenneker.Box.HttpClients.Tests;
 
-[Collection("Collection")]
-public sealed class BoxOpenApiHttpClientTests : FixturedUnitTest
+[ClassDataSource<Host>(Shared = SharedType.PerTestSession)]
+public sealed class BoxOpenApiHttpClientTests : HostedUnitTest
 {
     private readonly IBoxOpenApiHttpClient _httpclient;
 
-    public BoxOpenApiHttpClientTests(Fixture fixture, ITestOutputHelper output) : base(fixture, output)
+    public BoxOpenApiHttpClientTests(Host host) : base(host)
     {
         _httpclient = Resolve<IBoxOpenApiHttpClient>(true);
     }
 
-    [Fact]
+    [Test]
     public void Default()
     {
 
