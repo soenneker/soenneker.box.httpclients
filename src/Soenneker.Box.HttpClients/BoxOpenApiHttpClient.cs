@@ -11,7 +11,7 @@ using Soenneker.Utils.HttpClientCache.Abstract;
 
 namespace Soenneker.Box.HttpClients;
 
-///<inheritdoc cref="IBoxOpenApiHttpClient"/>
+/// <inheritdoc cref="IBoxOpenApiHttpClient"/>
 public sealed class BoxOpenApiHttpClient : IBoxOpenApiHttpClient
 {
     private readonly IHttpClientCache _httpClientCache;
