@@ -1,43 +1,82 @@
 [![](https://img.shields.io/nuget/v/soenneker.box.httpclients.svg?style=for-the-badge)](https://www.nuget.org/packages/soenneker.box.httpclients/)
 [![](https://img.shields.io/github/actions/workflow/status/soenneker/soenneker.box.httpclients/publish-package.yml?style=for-the-badge)](https://github.com/soenneker/soenneker.box.httpclients/actions/workflows/publish-package.yml)
 [![](https://img.shields.io/nuget/dt/soenneker.box.httpclients.svg?style=for-the-badge)](https://www.nuget.org/packages/soenneker.box.httpclients/)
+[![](https://img.shields.io/github/actions/workflow/status/soenneker/soenneker.box.httpclients/codeql.yml?label=CodeQL&style=for-the-badge)](https://github.com/soenneker/soenneker.box.httpclients/actions/workflows/codeql.yml)
 
 # Soenneker.Box.HttpClients
 
-A .NET thread-safe singleton HttpClient for.
+Provides a reusable `HttpClient` configured for the Box API and dependency injection.
 
-## Install
+## Installation
 
 ```bash
 dotnet add package Soenneker.Box.HttpClients
 ```
 
-## Quick start
+## Configuration
 
-```csharp
-using Soenneker.Box.HttpClients.Registrars;
-using Microsoft.Extensions.DependencyInjection;
-
-var services = new ServiceCollection();
-var result = services.AddBoxOpenApiHttpClientAsSingleton();
+```json
+{
+  "Box": {
+    "ApiKey": "<Box access token>",
+    "ClientBaseUrl": "https://api.box.com/2.0",
+    "AuthHeaderName": "Authorization",
+    "AuthHeaderValueTemplate": "Bearer {token}"
+  }
+}
 ```
 
-Adds `BoxOpenApiHttpClient` as a singleton service.
+Only `Box:ApiKey` is required. The other values above show their defaults. `{token}` in `AuthHeaderValueTemplate` is replaced with the configured value.
 
-## What you get
+Keep the access token in a secret provider rather than source control or a checked-in settings file.
 
-- `IBoxOpenApiHttpClient` — A .NET thread-safe singleton HttpClient for.
-- `BoxOpenApiHttpClientRegistrar` — Registers the OpenAPI HttpClient wrapper for dependency injection.
+## Registration
 
-## API at a glance
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using Soenneker.Box.HttpClients.Registrars;
 
-| API | What it does | Result / important behavior |
-| --- | --- | --- |
-| `BoxOpenApiHttpClientRegistrar.AddBoxOpenApiHttpClientAsSingleton(services)` | Adds `BoxOpenApiHttpClient` as a singleton service. | The same service collection, so additional registrations can be chained. |
-| `BoxOpenApiHttpClientRegistrar.AddBoxOpenApiHttpClientAsScoped(services)` | Adds `BoxOpenApiHttpClient` as a scoped service. | The same service collection, so additional registrations can be chained. |
+services.AddBoxOpenApiHttpClientAsSingleton();
+```
 
-## Practical notes
+`AddBoxOpenApiHttpClientAsScoped()` creates one wrapper and cached client per dependency-injection scope.
 
-- Reuse the registered client instead of constructing one per operation.
-- Calls that return a cached or singleton value reuse the same instance until the owning service is disposed.
-- Dispose instances you own when their scope ends so held resources can be released.
+## Usage
+
+```csharp
+using Soenneker.Box.HttpClients.Abstract;
+
+public sealed class BoxProfileClient
+{
+    private readonly IBoxOpenApiHttpClient _boxHttpClient;
+
+    public BoxProfileClient(IBoxOpenApiHttpClient boxHttpClient)
+    {
+        _boxHttpClient = boxHttpClient;
+    }
+
+    public async ValueTask<string> GetCurrentUser(
+        CancellationToken cancellationToken)
+    {
+        HttpClient client = await _boxHttpClient.Get(cancellationToken);
+
+        using HttpResponseMessage response = await client.GetAsync(
+            "/2.0/users/me",
+            cancellationToken);
+
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadAsStringAsync(cancellationToken);
+    }
+}
+```
+
+For generated-client usage, pair this package with `Soenneker.Box.OpenApiClientUtil` rather than issuing HTTP requests directly.
+
+## Lifecycle and behavior
+
+- `Get` returns the same `HttpClient` for the lifetime of the registered wrapper.
+- Do not dispose the returned client. Let the dependency-injection container dispose `IBoxOpenApiHttpClient` and its cache entry.
+- Configuration is read when the client is first created. Later configuration changes do not rebuild that cached client.
+- The cancellation token passed to `Get` applies to client initialization. Pass a token separately to every HTTP operation.
+- The default base address is `https://api.box.com/2.0`. Direct `HttpClient` calls should use an appropriate Box API path; the example uses a root-relative `/2.0/...` path.
+- Non-success responses are not converted to domain exceptions by this wrapper. Use `EnsureSuccessStatusCode`, inspect the response, or use the generated OpenAPI client.

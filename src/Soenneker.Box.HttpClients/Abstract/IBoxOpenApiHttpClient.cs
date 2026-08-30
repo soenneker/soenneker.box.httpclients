@@ -1,19 +1,19 @@
 using System;
 using System.Net.Http;
-using System.Threading.Tasks;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Soenneker.Box.HttpClients.Abstract;
 
 /// <summary>
-/// A .NET thread-safe singleton HttpClient for 
+/// Provides a configured, reusable HTTP client for the Box API.
 /// </summary>
-public interface IBoxOpenApiHttpClient: IDisposable, IAsyncDisposable
+public interface IBoxOpenApiHttpClient : IDisposable, IAsyncDisposable
 {
     /// <summary>
-    /// Returns the configured http Client used by the box open api http client.
+    /// Gets the cached HTTP client for this utility instance.
     /// </summary>
-    /// <param name="cancellationToken">Token used to cancel the operation.</param>
-    /// <returns>A task whose result is the requested http Client.</returns>
+    /// <param name="cancellationToken">Token used to cancel client initialization.</param>
+    /// <returns>An HTTP client configured with the Box base address and authorization header.</returns>
     ValueTask<HttpClient> Get(CancellationToken cancellationToken = default);
 }

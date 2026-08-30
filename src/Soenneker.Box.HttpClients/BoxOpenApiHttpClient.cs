@@ -16,6 +16,7 @@ public sealed class BoxOpenApiHttpClient : IBoxOpenApiHttpClient
 {
     private readonly IHttpClientCache _httpClientCache;
     private readonly IConfiguration _config;
+    private readonly string _httpClientCacheKey = $"{nameof(BoxOpenApiHttpClient)}:{Guid.NewGuid():N}";
 
     private const string _prodBaseUrl = "https://api.box.com/2.0";
 
@@ -27,7 +28,7 @@ public sealed class BoxOpenApiHttpClient : IBoxOpenApiHttpClient
 
     public ValueTask<HttpClient> Get(CancellationToken cancellationToken = default)
     {
-        return _httpClientCache.Get(nameof(BoxOpenApiHttpClient), (config: _config, baseUrl: _config["Box:ClientBaseUrl"] ?? _prodBaseUrl), static state =>
+        return _httpClientCache.Get(_httpClientCacheKey, (config: _config, baseUrl: _config["Box:ClientBaseUrl"] ?? _prodBaseUrl), static state =>
         {
             var apiKey = state.config.GetValueStrict<string>("Box:ApiKey");
             string authHeaderName = state.config["Box:AuthHeaderName"] ?? "Authorization";
@@ -50,7 +51,7 @@ public sealed class BoxOpenApiHttpClient : IBoxOpenApiHttpClient
     /// </summary>
     public void Dispose()
     {
-        _httpClientCache.RemoveSync(nameof(BoxOpenApiHttpClient));
+        _httpClientCache.RemoveSync(_httpClientCacheKey);
     }
 
     /// <summary>
@@ -59,6 +60,6 @@ public sealed class BoxOpenApiHttpClient : IBoxOpenApiHttpClient
     /// <returns>A task that represents the asynchronous operation.</returns>
     public ValueTask DisposeAsync()
     {
-        return _httpClientCache.Remove(nameof(BoxOpenApiHttpClient));
+        return _httpClientCache.Remove(_httpClientCacheKey);
     }
 }
