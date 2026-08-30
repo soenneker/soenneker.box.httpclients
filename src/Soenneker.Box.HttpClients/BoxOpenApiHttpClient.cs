@@ -11,7 +11,6 @@ using Soenneker.Utils.HttpClientCache.Abstract;
 
 namespace Soenneker.Box.HttpClients;
 
-/// <inheritdoc cref="IBoxOpenApiHttpClient"/>
 public sealed class BoxOpenApiHttpClient : IBoxOpenApiHttpClient
 {
     private readonly IHttpClientCache _httpClientCache;
@@ -46,18 +45,11 @@ public sealed class BoxOpenApiHttpClient : IBoxOpenApiHttpClient
         }, cancellationToken);
     }
 
-    /// <summary>
-    /// Releases resources used by the current instance.
-    /// </summary>
     public void Dispose()
     {
         _httpClientCache.RemoveSync(_httpClientCacheKey);
     }
 
-    /// <summary>
-    /// Asynchronously releases resources used by the current instance.
-    /// </summary>
-    /// <returns>A task that represents the asynchronous operation.</returns>
     public ValueTask DisposeAsync()
     {
         return _httpClientCache.Remove(_httpClientCacheKey);

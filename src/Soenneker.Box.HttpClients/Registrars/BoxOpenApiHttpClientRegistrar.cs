@@ -11,7 +11,7 @@ namespace Soenneker.Box.HttpClients.Registrars;
 public static class BoxOpenApiHttpClientRegistrar
 {
     /// <summary>
-    /// Adds <see cref="BoxOpenApiHttpClient"/> as a singleton service. <para/>
+    /// Adds <see cref="IBoxOpenApiHttpClient"/> as a singleton service.
     /// </summary>
     /// <param name="services">Service collection that receives the registration.</param>
     /// <returns>The same service collection, so additional registrations can be chained.</returns>
@@ -24,7 +24,7 @@ public static class BoxOpenApiHttpClientRegistrar
     }
 
     /// <summary>
-    /// Adds <see cref="BoxOpenApiHttpClient"/> as a scoped service. <para/>
+    /// Adds <see cref="IBoxOpenApiHttpClient"/> as a scoped service. Each scope owns a distinct named client.
     /// </summary>
     /// <param name="services">Service collection that receives the registration.</param>
     /// <returns>The same service collection, so additional registrations can be chained.</returns>
