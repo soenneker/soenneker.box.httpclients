@@ -30,7 +30,7 @@ public sealed class BoxOpenApiHttpClient : IBoxOpenApiHttpClient
     {
         return _httpClientCache.Get(_httpClientCacheKey, (config: _config, baseUrl: _config["Box:ClientBaseUrl"] ?? _prodBaseUrl), static state =>
         {
-            var apiKey = state.config.GetValueStrict<string>("Box:ApiKey");
+            var apiKey = state.config.GetStringStrict("Box:ApiKey");
             string authHeaderName = state.config["Box:AuthHeaderName"] ?? "Authorization";
             string authHeaderValueTemplate = state.config["Box:AuthHeaderValueTemplate"] ?? "Bearer {token}";
             string authHeaderValue = authHeaderValueTemplate.Replace("{token}", apiKey, StringComparison.Ordinal);
